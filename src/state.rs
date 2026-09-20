@@ -1,5 +1,8 @@
+use crate::coords::Grid;
 use crate::pellet::Pellet;
 use crate::snake::Snake;
+use crate::util;
+use cgmath::Vector2;
 use dynamo_lib::geometry::quad::Quad;
 use dynamo_lib::geometry::Geometry;
 use dynamo_lib::renderer::render_text::{RenderText, TextRenderer, UNBOUNDED_F32};
@@ -38,24 +41,20 @@ pub struct State {
   pub quit_button: SnakeText,
   pub score: SnakeText,
   pub win_text: SnakeText,
-  // window_size: (f32, f32),
+  /// The playfield, rebuilt whenever the window changes size.
+  pub grid: Grid,
+  /// Seconds since the previous update.
+  pub delta_time: f32,
 }
 
 impl State {
   pub fn new() -> Self {
     Self {
       game_state: GameState::MainMenu,
-      walls: vec![
-        // Unclear why the size needs to be 4 to stretch the coordinate system
-        // x & y min are -1, x & y max are +1
-        // where does 4 come from?? All I know is 2 only goes halfway across the window
-        Quad::new((-1.0, -1.0).into(), (4.0, 0.02).into()),
-        Quad::new((-1.0, 1.0).into(), (4.0, 0.02).into()),
-        Quad::new((1.0, -1.0).into(), (0.02, 4.0).into()),
-        Quad::new((-1.0, -1.0).into(), (0.02, 4.0).into()),
-      ],
-      snake: Snake::new((0.0, 0.0).into(), (0.04, 0.04).into()),
-      pellet: Pellet::new((0.0, 0.0).into(), 0.04),
+      // all built by layout()
+      walls: Vec::new(),
+      snake: Snake::new(),
+      pellet: Pellet::new(),
       title_text: SnakeText {
         visible: false,
         render_text: RenderText {
@@ -100,15 +99,63 @@ impl State {
       win_text: SnakeText {
         visible: false,
         render_text: RenderText {
-          // position: (render.width() * 0.5, render.height() * 0.5).into(),
-          position: (200.0, 200.0).into(),
+          // centered in the window by layout()
+          position: (0.0, 0.0).into(),
           bounds: (UNBOUNDED_F32, UNBOUNDED_F32).into(),
           size: 32.0,
           centered: true,
           ..Default::default()
         },
       },
+      grid: Grid::new((0.0, 0.0).into(), util::GRID_ROWS),
+      delta_time: 0.0,
     }
+  }
+
+  /// Rebuilds the playfield for a window of `size` pixels. Mid-game the snake and
+  /// pellet keep their cells, so play continues where it was.
+  pub fn layout(&mut self, size: Vector2<f32>) {
+    let old = self.grid;
+    self.grid = Grid::new(size, util::GRID_ROWS);
+    let grid = self.grid;
+    let field = grid.size();
+    let thickness = (grid.cell * 0.2).max(2.0);
+
+    self.walls = vec![
+      Quad::new(
+        (grid.origin.x + field.x * 0.5, grid.origin.y).into(),
+        (field.x + thickness, thickness).into(),
+      ),
+      Quad::new(
+        (grid.origin.x + field.x * 0.5, grid.origin.y + field.y).into(),
+        (field.x + thickness, thickness).into(),
+      ),
+      Quad::new(
+        (grid.origin.x, grid.origin.y + field.y * 0.5).into(),
+        (thickness, field.y + thickness).into(),
+      ),
+      Quad::new(
+        (grid.origin.x + field.x, grid.origin.y + field.y * 0.5).into(),
+        (thickness, field.y + thickness).into(),
+      ),
+    ];
+
+    if self.snake.body.is_empty() {
+      self.snake.reset(&grid);
+      self.pellet.place(&grid, (grid.cols / 4, grid.rows / 2));
+    } else {
+      let pellet_cell = self.pellet.cell(&old);
+      self.snake.regrid(&old, &grid);
+      self.pellet.place(
+        &grid,
+        (
+          pellet_cell.0.max(0).min(grid.cols - 1),
+          pellet_cell.1.max(0).min(grid.rows - 1),
+        ),
+      );
+    }
+
+    self.win_text.render_text.position = size * 0.5;
   }
 
   pub fn initialize(&mut self, geometry: &mut Geometry, text_renderer: &mut TextRenderer) {
@@ -157,5 +204,35 @@ impl State {
     if self.game_state == GameState::Playing {
       self.game_state = GameState::Paused;
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn state_of(width: f32, height: f32) -> State {
+    let mut state = State::new();
+    state.layout((width, height).into());
+    state
+  }
+
+  #[test]
+  fn layout_makes_four_walls() {
+    let state = state_of(800.0, 600.0);
+
+    assert_eq!(state.walls.len(), 4);
+  }
+
+  #[test]
+  fn resize_keeps_cells() {
+    let mut state = state_of(800.0, 600.0);
+    let snake_cell = state.snake.head_cell(&state.grid);
+    let pellet_cell = state.pellet.cell(&state.grid);
+
+    state.layout((1600.0, 1200.0).into());
+
+    assert_eq!(state.snake.head_cell(&state.grid), snake_cell);
+    assert_eq!(state.pellet.cell(&state.grid), pellet_cell);
   }
 }

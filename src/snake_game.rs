@@ -33,7 +33,7 @@ pub enum Event {
   ButtonPressed,
   FocusChanged,
   SnakeCrashed,
-  Score(u32),
+  Score,
 }
 
 pub struct SnakeGame {
@@ -70,24 +70,28 @@ impl Game for SnakeGame {
     geometry: &mut Geometry,
     text_renderer: &mut TextRenderer,
     _sound_system: &SoundSystem,
-    _window_size: (f32, f32),
+    window_size: (f32, f32),
   ) {
+    self.resized(window_size);
     self.menu_system.start(&mut self.state);
     self.state.initialize(geometry, text_renderer);
   }
 
   fn update(
     &mut self,
+    dt: f32,
     geometry: &mut Geometry,
     text_renderer: &mut TextRenderer,
     sound_system: &SoundSystem,
   ) {
+    self.state.delta_time = dt;
+
     for event in &self.events {
       match event {
         Event::FocusChanged | Event::ButtonPressed | Event::SnakeCrashed => {
           sound_system.queue(self.sound_pack.bounce());
         }
-        Event::Score(_) => {
+        Event::Score => {
           sound_system.queue(self.sound_pack.bounce());
         }
       }
@@ -149,9 +153,46 @@ impl Game for SnakeGame {
   }
 
   fn focus_changed(&mut self, focus: bool) {
-    if !focus {
+    // only a run can be paused; losing focus on the menu or the game over
+    // screen leaves the screen alone
+    if !focus && self.state.game_state == GameState::Playing {
       self.pause_system.start(&mut self.state);
       self.state.pause_game();
     }
+  }
+
+  fn resized(&mut self, window_size: (f32, f32)) {
+    self.state.layout(window_size.into());
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn game_in(game_state: GameState) -> SnakeGame {
+    let mut game = SnakeGame::new();
+    game.state.layout((800.0, 600.0).into());
+    game.state.game_state = game_state;
+    game
+  }
+
+  #[test]
+  fn losing_focus_while_playing_pauses() {
+    let mut game = game_in(GameState::Playing);
+    game.focus_changed(false);
+
+    assert_eq!(game.state.game_state, GameState::Paused);
+    assert_eq!(game.state.play_button.render_text.text, "Resume");
+  }
+
+  #[test]
+  fn losing_focus_on_the_menu_does_nothing() {
+    let mut game = game_in(GameState::MainMenu);
+    game.focus_changed(false);
+
+    assert_eq!(game.state.game_state, GameState::MainMenu);
+    assert_eq!(game.state.title_text.render_text.text, "SNAKE");
+    assert_eq!(game.state.play_button.render_text.text, "Play");
   }
 }

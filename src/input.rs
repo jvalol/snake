@@ -46,7 +46,9 @@ impl Input {
         self.enter_pressed = pressed;
       }
       KeyboardKey::Escape => {
-        self.esc_pressed = true;
+        if pressed && !input.repeat {
+          self.esc_pressed = true;
+        }
       }
       _ => (),
     }
@@ -57,15 +59,43 @@ impl Input {
   }
 
   pub fn ui_down_pressed(&self) -> bool {
-    self.down_pressed || self.down_pressed
+    self.down_pressed
   }
 
   pub fn clear(&mut self) {
     self.up_pressed = false;
     self.down_pressed = false;
-    self.up_pressed = false;
-    self.down_pressed = false;
+    self.left_pressed = false;
+    self.right_pressed = false;
     self.enter_pressed = false;
     self.esc_pressed = false;
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use dynamo_lib::keyboard::{KeyboardKey, KeyboardKeyState};
+
+  fn escape(state: KeyboardKeyState, repeat: bool) -> KeyboardInput {
+    KeyboardInput::new(KeyboardKey::Escape, state, repeat)
+  }
+
+  #[test]
+  fn escape_ignores_key_repeat() {
+    let mut input = Input::new();
+    input.update(escape(KeyboardKeyState::Pressed, true));
+
+    assert!(!input.esc_pressed);
+  }
+
+  #[test]
+  fn escape_ignores_release() {
+    let mut input = Input::new();
+    input.update(escape(KeyboardKeyState::Released, false));
+    assert!(!input.esc_pressed);
+
+    input.update(escape(KeyboardKeyState::Pressed, false));
+    assert!(input.esc_pressed);
   }
 }
