@@ -171,11 +171,11 @@ impl State {
   fn update_geometry(&self, geometry: &mut Geometry) {
     if self.snake.visible {
       for quad in self.walls.iter() {
-        geometry.push_quad(&quad);
+        geometry.push_quad(quad);
       }
 
       for quad in self.snake.body.iter() {
-        geometry.push_quad(&quad);
+        geometry.push_quad(quad);
       }
     }
 
@@ -185,7 +185,7 @@ impl State {
   }
 
   fn update_text(&self, text_renderer: &mut TextRenderer) {
-    for text in vec![
+    for text in [
       &self.title_text,
       &self.play_button,
       &self.quit_button,
