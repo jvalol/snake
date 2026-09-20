@@ -1,4 +1,4 @@
-use dynamo_lib::keyboard::*;
+use blitkit::keyboard::*;
 
 #[derive(Debug, Default)]
 pub struct Input {
@@ -73,7 +73,7 @@ impl Input {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use dynamo_lib::keyboard::{KeyboardKey, KeyboardKeyState};
+  use blitkit::keyboard::{KeyboardKey, KeyboardKeyState};
 
   fn escape(state: KeyboardKeyState, repeat: bool) -> KeyboardInput {
     KeyboardInput::new(KeyboardKey::Escape, state, repeat)

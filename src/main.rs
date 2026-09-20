@@ -1,4 +1,4 @@
-use dynamo_lib::start;
+use blitkit::start;
 
 mod coords;
 mod input;

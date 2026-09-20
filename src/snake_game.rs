@@ -1,8 +1,8 @@
-use dynamo_lib::geometry::Geometry;
-use dynamo_lib::keyboard::*;
-use dynamo_lib::renderer::render_text::TextRenderer;
-use dynamo_lib::sound::SoundSystem;
-use dynamo_lib::Game;
+use blitkit::geometry::Geometry;
+use blitkit::keyboard::*;
+use blitkit::renderer::render_text::TextRenderer;
+use blitkit::sound::SoundSystem;
+use blitkit::Game;
 
 use std::io::Cursor;
 

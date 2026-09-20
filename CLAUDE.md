@@ -1,7 +1,7 @@
 # snake
 
-Eat pellets, grow, don't hit the walls or yourself. Built on `dynamo_lib`, which
-lives at `../rust/dynamo_lib` and owns the window, rendering, input, and sound.
+Eat pellets, grow, don't hit the walls or yourself. Built on `blitkit`, which
+lives at `../rust/blitkit` and owns the window, rendering, input, and sound.
 
 ## Build and test
 
@@ -29,7 +29,7 @@ Behavior changes are spec driven:
 
 ## Layout
 
-- `src/main.rs` — hands a `SnakeGame` to `dynamo_lib::start`.
+- `src/main.rs` — hands a `SnakeGame` to `blitkit::start`.
 - `src/snake_game.rs` — the `Game` impl, the event list, sound.
 - `src/coords.rs` — `Grid`, the playfield, and every pixel-to-cell conversion.
 - `src/state.rs` — everything the game knows, and `layout()` which builds the grid.

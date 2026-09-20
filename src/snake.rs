@@ -3,7 +3,7 @@ use crate::util;
 use crate::util::Direction;
 use crate::util::Direction::*;
 use cgmath::Vector2;
-use dynamo_lib::geometry::quad::Quad;
+use blitkit::geometry::quad::Quad;
 
 pub struct Snake {
   /// Head first. One quad per cell the snake fills.
