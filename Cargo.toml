@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-blitkit = { version = "0.2", path = "../blitkit" }
+blitkit = "0.2"
 glam = "0.33"
 rodio = { version = "0.22", default-features = false, features = ["wav"] }
 rand = "0.8.3"
