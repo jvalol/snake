@@ -2,7 +2,7 @@ use crate::coords::Grid;
 use crate::pellet::Pellet;
 use crate::snake::Snake;
 use crate::util;
-use cgmath::Vector2;
+use glam::Vec2;
 use blitkit::geometry::quad::Quad;
 use blitkit::geometry::Geometry;
 use blitkit::renderer::render_text::{RenderText, TextRenderer, UNBOUNDED_F32};
@@ -114,7 +114,7 @@ impl State {
 
   /// Rebuilds the playfield for a window of `size` pixels. Mid-game the snake and
   /// pellet keep their cells, so play continues where it was.
-  pub fn layout(&mut self, size: Vector2<f32>) {
+  pub fn layout(&mut self, size: Vec2) {
     let old = self.grid;
     self.grid = Grid::new(size, util::GRID_ROWS);
     let grid = self.grid;

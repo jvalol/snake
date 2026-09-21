@@ -2,14 +2,14 @@ use crate::coords::Grid;
 use crate::util;
 use crate::util::Direction;
 use crate::util::Direction::*;
-use cgmath::Vector2;
+use glam::Vec2;
 use blitkit::geometry::quad::Quad;
 
 pub struct Snake {
   /// Head first. One quad per cell the snake fills.
   pub body: Vec<Quad>,
   /// The head's position in pixels, which moves smoothly between cells.
-  pub position: Vector2<f32>,
+  pub position: Vec2,
   pub direction: Direction,
   /// Cells per second.
   pub speed: f32,
@@ -42,7 +42,7 @@ impl Snake {
     self.direction = direction;
   }
 
-  pub fn direction(&self) -> Vector2<f32> {
+  pub fn direction(&self) -> Vec2 {
     match self.direction {
       None => (0.0, 0.0).into(),
       Up => (0.0, -1.0).into(),
@@ -63,7 +63,7 @@ impl Snake {
     self.update_position(grid, self.position + step);
   }
 
-  pub fn update_position(&mut self, grid: &Grid, position: Vector2<f32>) {
+  pub fn update_position(&mut self, grid: &Grid, position: Vec2) {
     let old_cell = grid.cell_at(self.head().position);
     let new_cell = grid.cell_at(position);
     self.position = position;

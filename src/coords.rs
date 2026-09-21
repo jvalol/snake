@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use glam::Vec2;
 
 /// The playfield: a grid of square cells centered in the window.
 ///
@@ -7,7 +7,7 @@ use cgmath::Vector2;
 #[derive(Debug, Copy, Clone)]
 pub struct Grid {
   /// Top-left corner of the playfield in pixels.
-  pub origin: Vector2<f32>,
+  pub origin: Vec2,
   /// Width and height of one cell in pixels.
   pub cell: f32,
   pub cols: i32,
@@ -17,11 +17,11 @@ pub struct Grid {
 impl Grid {
   /// Fits `rows` rows of square cells into a window of `size` pixels, then fills
   /// the width with as many columns as fit and centers the result.
-  pub fn new(size: Vector2<f32>, rows: i32) -> Grid {
+  pub fn new(size: Vec2, rows: i32) -> Grid {
     let cell = (size.y / rows as f32).floor().max(1.0);
     let cols = ((size.x / cell).floor() as i32).max(1);
     let rows = ((size.y / cell).floor() as i32).max(1);
-    let origin = Vector2::new(
+    let origin = Vec2::new(
       (size.x - cols as f32 * cell) * 0.5,
       (size.y - rows as f32 * cell) * 0.5,
     );
@@ -36,7 +36,7 @@ impl Grid {
 
   /// The cell holding `position`. Cells outside the playfield are negative or
   /// past `cols` and `rows`, which is how a crash into a wall is detected.
-  pub fn cell_at(&self, position: Vector2<f32>) -> (i32, i32) {
+  pub fn cell_at(&self, position: Vec2) -> (i32, i32) {
     (
       ((position.x - self.origin.x) / self.cell).floor() as i32,
       ((position.y - self.origin.y) / self.cell).floor() as i32,
@@ -44,8 +44,8 @@ impl Grid {
   }
 
   /// The center of `cell` in pixels.
-  pub fn center_of(&self, cell: (i32, i32)) -> Vector2<f32> {
-    Vector2::new(
+  pub fn center_of(&self, cell: (i32, i32)) -> Vec2 {
+    Vec2::new(
       self.origin.x + (cell.0 as f32 + 0.5) * self.cell,
       self.origin.y + (cell.1 as f32 + 0.5) * self.cell,
     )
@@ -56,8 +56,8 @@ impl Grid {
   }
 
   /// Playfield size in pixels, which is the window size minus the leftover edges.
-  pub fn size(&self) -> Vector2<f32> {
-    Vector2::new(self.cols as f32 * self.cell, self.rows as f32 * self.cell)
+  pub fn size(&self) -> Vec2 {
+    Vec2::new(self.cols as f32 * self.cell, self.rows as f32 * self.cell)
   }
 }
 
