@@ -1,8 +1,8 @@
-use blitkit::geometry::Geometry;
-use blitkit::keyboard::*;
-use blitkit::renderer::render_text::TextRenderer;
-use blitkit::sound::SoundSystem;
-use blitkit::Game;
+use blitzkit::geometry::Geometry;
+use blitzkit::keyboard::*;
+use blitzkit::renderer::render_text::TextRenderer;
+use blitzkit::sound::SoundSystem;
+use blitzkit::Game;
 
 use std::io::Cursor;
 

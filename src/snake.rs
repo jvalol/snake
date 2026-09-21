@@ -3,7 +3,7 @@ use crate::util;
 use crate::util::Direction;
 use crate::util::Direction::*;
 use glam::Vec2;
-use blitkit::geometry::quad::Quad;
+use blitzkit::geometry::quad::Quad;
 
 pub struct Snake {
   /// Head first. One quad per cell the snake fills.

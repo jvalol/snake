@@ -3,7 +3,7 @@ use glam::Vec2;
 /// The playfield: a grid of square cells centered in the window.
 ///
 /// Positions are in pixels with the origin at the window's top-left corner and
-/// y pointing down, the space blitkit draws quads in.
+/// y pointing down, the space blitzkit draws quads in.
 #[derive(Debug, Copy, Clone)]
 pub struct Grid {
   /// Top-left corner of the playfield in pixels.

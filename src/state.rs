@@ -3,9 +3,9 @@ use crate::pellet::Pellet;
 use crate::snake::Snake;
 use crate::util;
 use glam::Vec2;
-use blitkit::geometry::quad::Quad;
-use blitkit::geometry::Geometry;
-use blitkit::renderer::render_text::{RenderText, TextRenderer, UNBOUNDED_F32};
+use blitzkit::geometry::quad::Quad;
+use blitzkit::geometry::Geometry;
+use blitzkit::renderer::render_text::{RenderText, TextRenderer, UNBOUNDED_F32};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum GameState {

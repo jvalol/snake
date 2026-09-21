@@ -1,5 +1,5 @@
 use crate::coords::Grid;
-use blitkit::geometry::quad::Quad;
+use blitzkit::geometry::quad::Quad;
 
 pub struct Pellet {
   pub quad: Quad,
