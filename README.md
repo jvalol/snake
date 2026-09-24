@@ -2,7 +2,7 @@
 
 In which I develop a snake game using blitzkit
 
-![Snake: the snake mid board with a pellet below it, and the score at the top](media/screenshot.png)
+![Snake: the snake running along the top of the board and turning down at the end, a pellet near the score](media/screenshot.png)
 
 ## The project
 
