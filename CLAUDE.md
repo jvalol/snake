@@ -1,7 +1,9 @@
 # snake
 
-Eat pellets, grow, don't hit the walls or yourself. Built on `blitzkit`, which
-lives at `../rust/blitzkit` and owns the window, rendering, input, and sound.
+Eat pellets, grow, don't hit the walls or yourself. The second game built on
+`blitzkit`, which owns the window, rendering, input, and sound. The dependency
+is the published crate, overridden by the engine checkout at `../blitzkit` when
+built inside this project folder.
 
 ## Build and test
 
