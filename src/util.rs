@@ -10,11 +10,11 @@ pub const SNAKE_SPEED_INC: f32 = 0.5;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Direction {
-  None,
-  Up,
-  Down,
-  Left,
-  Right,
+    None,
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 #[macro_export]
