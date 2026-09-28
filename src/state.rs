@@ -72,6 +72,9 @@ impl State {
                     color: (1.0, 1.0, 1.0, 1.0).into(),
                     text: String::from("Play"),
                     size: 32.0,
+                    // the engine dims it until it is focused, and gives the
+                    // focused one a caret. See blitzkit spec 0023.
+                    selectable: true,
                     ..Default::default()
                 },
             },
@@ -82,6 +85,9 @@ impl State {
                     color: (1.0, 1.0, 1.0, 1.0).into(),
                     text: String::from("Quit"),
                     size: 32.0,
+                    // the engine dims it until it is focused, and gives the
+                    // focused one a caret. See blitzkit spec 0023.
+                    selectable: true,
                     ..Default::default()
                 },
             },
@@ -210,6 +216,21 @@ impl State {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_menu_items_are_selectable_and_the_title_is_not() {
+        // the engine dims a selectable line until it is focused and gives the
+        // focused one a caret, which is the only thing saying Quit can be
+        // chosen at all. See blitzkit spec 0023.
+        let state = State::new();
+
+        assert!(state.play_button.render_text.selectable);
+        assert!(state.quit_button.render_text.selectable);
+        assert!(
+            !state.title_text.render_text.selectable,
+            "the title is not a choice"
+        );
+    }
 
     fn state_of(width: f32, height: f32) -> State {
         let mut state = State::new();
