@@ -122,6 +122,9 @@ impl Game for SnakeGame {
             GameState::Paused => {
                 self.pause_system
                     .update_state(&mut self.input, &mut self.state, &mut self.events);
+                if self.state.game_state == GameState::MainMenu {
+                    self.menu_system.start(&mut self.state);
+                }
             }
             GameState::GameOver => {
                 self.game_over_system.update_state(
@@ -182,6 +185,23 @@ mod tests {
 
         assert_eq!(game.state.game_state, GameState::Paused);
         assert_eq!(game.state.play_button.render_text.text, "Resume");
+    }
+
+    #[test]
+    fn escaping_out_of_a_pause_arrives_at_a_real_menu() {
+        let mut game = game_in(GameState::Playing);
+        game.focus_changed(false);
+        assert_eq!(game.state.play_button.render_text.text, "Resume");
+
+        game.input.esc_pressed = true;
+        let mut geometry = Geometry::new();
+        let mut text_renderer = TextRenderer::new();
+        let sound_system = SoundSystem::new();
+        game.update(0.016, &mut geometry, &mut text_renderer, &sound_system);
+
+        assert_eq!(game.state.game_state, GameState::MainMenu);
+        assert_eq!(game.state.title_text.render_text.text, "SNAKE");
+        assert_eq!(game.state.play_button.render_text.text, "Play");
     }
 
     #[test]
