@@ -15,9 +15,10 @@ and Escape quits.
 **Playing.** The run, per specs 0002 and 0003. Escape returns to the menu.
 
 **Paused.** Losing window focus during a run pauses it and shows Paused with
-Resume. Enter resumes. Losing focus anywhere else, such as on the menu or the
-game over screen, changes nothing. Returning to the menu puts its own wording
-back.
+Resume. Enter resumes, and Escape leaves for the menu the way it does during a
+run, so a pause is not the one state the key stops working in. Losing focus
+anywhere else, such as on the menu or the game over screen, changes nothing.
+Returning to the menu puts its own wording back.
 
 **Game over.** "Game Over" is shown for five seconds, then the game returns to the
 menu. Escape quits from here.
@@ -39,6 +40,9 @@ menu and quit the game.
 - Losing focus on the menu changes nothing. — `snake_game::tests::losing_focus_on_the_menu_does_nothing`
 - Enter resumes a paused run. — `system::tests::resuming_returns_to_playing`
 - The menu's wording comes back when a run ends. — `system::tests::returning_to_the_menu_restores_its_text`
+- Escape leaves a paused run. — `system::tests::escape_leaves_a_paused_game`
+- The menu it arrives at reads like the menu, not like the pause it came from.
+  — `snake_game::tests::escaping_out_of_a_pause_arrives_at_a_real_menu`
 
 ### Verified by hand
 
