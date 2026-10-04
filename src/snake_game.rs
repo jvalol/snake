@@ -9,6 +9,7 @@ use std::io::Cursor;
 use crate::input::Input;
 use crate::state::*;
 use crate::system::*;
+use crate::util::Direction;
 
 const BOUNCE_BYTES: &[u8] = include_bytes!("../res/sounds/4362__noisecollector__pongblipa-4.wav");
 
@@ -46,9 +47,60 @@ pub struct SnakeGame {
     pause_system: PauseSystem,
     game_over_system: GameOverSystem,
     sound_pack: SoundPack,
+    /// Whether this run is only here to be photographed, and how long it has
+    /// been posing. See `refresh-screenshots` in the project above.
+    ///
+    /// A picture of the main menu says nothing about snake, and a picture of a
+    /// snake that has just started playing is two squares in a line. This
+    /// plays the game: it starts, grows to nine, turns twice, and then holds
+    /// still to be photographed.
+    staged: bool,
+    posing: f32,
 }
 
 impl SnakeGame {
+    /// How long the posed snake plays before it holds still, and when it turns.
+    ///
+    /// Two turns, so the body reads as a snake that has been somewhere rather
+    /// than a bar. It holds by having no time pass rather than by skipping the
+    /// systems, so everything else still draws.
+    ///
+    /// A nine segment body covers the last nine cells travelled, so to show
+    /// two turns each leg has to be about three cells. At eight cells a second
+    /// that is four tenths of a second. The first try turned every seven cells
+    /// and the body could only hold one of the turns.
+    const GROWN: usize = 8;
+    const FIRST_TURN: f32 = 0.42;
+    const SECOND_TURN: f32 = 0.80;
+    const HOLDS_AT: f32 = 1.18;
+
+    /// Plays the game for the camera. See `refresh-screenshots`.
+    fn pose(&mut self, dt: f32) {
+        let was = self.posing;
+        self.posing += dt;
+
+        if was == 0.0 {
+            self.state.game_state = GameState::Playing;
+            self.play_system.start(&mut self.state);
+            self.state.snake.update_direction(Direction::Right);
+            for _ in 0..Self::GROWN {
+                self.state.snake.grow_body(&self.state.grid);
+            }
+        }
+
+        let now = self.posing;
+        let crossed = |at: f32| was < at && now >= at;
+        if crossed(Self::FIRST_TURN) {
+            self.state.snake.update_direction(Direction::Up);
+        }
+        if crossed(Self::SECOND_TURN) {
+            self.state.snake.update_direction(Direction::Right);
+        }
+        if self.posing >= Self::HOLDS_AT {
+            self.state.delta_time = 0.0;
+        }
+    }
+
     pub fn new() -> Self {
         Self {
             input: Input::new(),
@@ -60,6 +112,8 @@ impl SnakeGame {
             pause_system: PauseSystem,
             game_over_system: GameOverSystem::new(),
             sound_pack: SoundPack::new(),
+            staged: crate::staged(),
+            posing: 0.0,
         }
     }
 }
@@ -85,6 +139,10 @@ impl Game for SnakeGame {
         sound_system: &SoundSystem,
     ) {
         self.state.delta_time = dt;
+
+        if self.staged {
+            self.pose(dt);
+        }
 
         for event in &self.events {
             match event {
@@ -154,6 +212,12 @@ impl Game for SnakeGame {
     }
 
     fn focus_changed(&mut self, focus: bool) {
+        // a staged run is photographed from behind the terminal, so it never
+        // has focus and pausing on losing it would photograph the pause screen
+        if self.staged {
+            return;
+        }
+
         // only a run can be paused; losing focus on the menu or the game over
         // screen leaves the screen alone
         if !focus && self.state.game_state == GameState::Playing {
