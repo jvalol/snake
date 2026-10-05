@@ -189,14 +189,14 @@ impl State {
         if self.pellet.visible {
             geometry.push_quad(&self.pellet.quad);
         }
-    
+
         // last, so the panel covers the field rather than the other way round
         if self.win_text.visible {
             for quad in notice::framing(&self.win_text.render_text).iter() {
                 geometry.push_quad(quad);
             }
         }
-}
+    }
 
     fn update_text(&self, text_renderer: &mut TextRenderer) {
         for text in [
