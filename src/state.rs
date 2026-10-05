@@ -4,6 +4,7 @@ use crate::snake::Snake;
 use crate::util;
 use blitzkit::geometry::quad::Quad;
 use blitzkit::geometry::Geometry;
+use blitzkit::notice;
 use blitzkit::renderer::render_text::{RenderText, TextRenderer, UNBOUNDED_F32};
 use glam::Vec2;
 
@@ -188,7 +189,14 @@ impl State {
         if self.pellet.visible {
             geometry.push_quad(&self.pellet.quad);
         }
-    }
+    
+        // last, so the panel covers the field rather than the other way round
+        if self.win_text.visible {
+            for quad in notice::framing(&self.win_text.render_text).iter() {
+                geometry.push_quad(quad);
+            }
+        }
+}
 
     fn update_text(&self, text_renderer: &mut TextRenderer) {
         for text in [
@@ -255,5 +263,21 @@ mod tests {
 
         assert_eq!(state.snake.head_cell(&state.grid), snake_cell);
         assert_eq!(state.pellet.cell(&state.grid), pellet_cell);
+    }
+
+    #[test]
+    fn the_win_line_is_framed() {
+        let mut state = State::new();
+        state.layout(glam::vec2(800.0, 600.0));
+
+        let mut bare = Geometry::new();
+        state.win_text.visible = false;
+        state.update_geometry(&mut bare);
+
+        let mut framed = Geometry::new();
+        state.win_text.visible = true;
+        state.update_geometry(&mut framed);
+
+        assert_eq!(framed.num_quads, bare.num_quads + 2);
     }
 }
