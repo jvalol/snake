@@ -10,7 +10,6 @@ use glam::Vec2;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum GameState {
-    MainMenu,
     Playing,
     Paused,
     GameOver,
@@ -22,24 +21,12 @@ pub struct SnakeText {
     pub visible: bool,
 }
 
-impl SnakeText {
-    pub fn focused(&self) -> bool {
-        self.render_text.focused
-    }
-
-    pub fn set_focus(&mut self, focused: bool) {
-        self.render_text.focused = focused;
-    }
-}
-
 pub struct State {
     pub game_state: GameState,
     pub walls: Vec<Quad>,
     pub snake: Snake,
     pub pellet: Pellet,
-    pub title_text: SnakeText,
-    pub play_button: SnakeText,
-    pub quit_button: SnakeText,
+    pub pause_text: SnakeText,
     pub score: SnakeText,
     pub win_text: SnakeText,
     /// The playfield, rebuilt whenever the window changes size.
@@ -51,44 +38,18 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         Self {
-            game_state: GameState::MainMenu,
+            game_state: GameState::Playing,
             // all built by layout()
             walls: Vec::new(),
             snake: Snake::new(),
             pellet: Pellet::new(),
-            title_text: SnakeText {
+            pause_text: SnakeText {
                 visible: false,
                 render_text: RenderText {
                     position: (20.0, 20.0).into(),
                     color: (1.0, 1.0, 1.0, 1.0).into(),
-                    text: String::from("SNAKE"),
-                    size: 64.0,
-                    ..Default::default()
-                },
-            },
-            play_button: SnakeText {
-                visible: false,
-                render_text: RenderText {
-                    position: (40.0, 100.0).into(),
-                    color: (1.0, 1.0, 1.0, 1.0).into(),
-                    text: String::from("Play"),
-                    size: 32.0,
-                    // the engine dims it until it is focused, and gives the
-                    // focused one a caret. See blitzkit spec 0023.
-                    selectable: true,
-                    ..Default::default()
-                },
-            },
-            quit_button: SnakeText {
-                visible: false,
-                render_text: RenderText {
-                    position: (40.0, 160.0).into(),
-                    color: (1.0, 1.0, 1.0, 1.0).into(),
-                    text: String::from("Quit"),
-                    size: 32.0,
-                    // the engine dims it until it is focused, and gives the
-                    // focused one a caret. See blitzkit spec 0023.
-                    selectable: true,
+                    size: 24.0,
+                    centered: true,
                     ..Default::default()
                 },
             },
@@ -163,6 +124,7 @@ impl State {
         }
 
         self.win_text.render_text.position = size * 0.5;
+        self.pause_text.render_text.position = size * 0.5;
     }
 
     pub fn initialize(&mut self, geometry: &mut Geometry, text_renderer: &mut TextRenderer) {
@@ -191,23 +153,17 @@ impl State {
         }
 
         // last, so the panel covers the field rather than the other way round
-        if self.win_text.visible {
-            for quad in notice::framing(&self.win_text.render_text).iter() {
-                geometry.push_quad(quad);
+        for text in [&self.pause_text, &self.win_text] {
+            if text.visible {
+                for quad in notice::framing(&text.render_text).iter() {
+                    geometry.push_quad(quad);
+                }
             }
         }
     }
 
     fn update_text(&self, text_renderer: &mut TextRenderer) {
-        for text in [
-            &self.title_text,
-            &self.play_button,
-            &self.quit_button,
-            &self.score,
-            &self.win_text,
-        ]
-        .iter()
-        {
+        for text in [&self.pause_text, &self.score, &self.win_text].iter() {
             if text.visible {
                 text_renderer.push_render_text(text.render_text.clone());
             }
@@ -224,21 +180,6 @@ impl State {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn the_menu_items_are_selectable_and_the_title_is_not() {
-        // the engine dims a selectable line until it is focused and gives the
-        // focused one a caret, which is the only thing saying Quit can be
-        // chosen at all. See blitzkit spec 0023.
-        let state = State::new();
-
-        assert!(state.play_button.render_text.selectable);
-        assert!(state.quit_button.render_text.selectable);
-        assert!(
-            !state.title_text.render_text.selectable,
-            "the title is not a choice"
-        );
-    }
 
     fn state_of(width: f32, height: f32) -> State {
         let mut state = State::new();

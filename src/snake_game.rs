@@ -32,7 +32,6 @@ impl SoundPack {
 #[derive(Debug, Copy, Clone)]
 pub enum Event {
     ButtonPressed,
-    FocusChanged,
     SnakeCrashed,
     Score,
 }
@@ -41,7 +40,6 @@ pub struct SnakeGame {
     pub input: Input,
     events: Vec<Event>,
     state: State,
-    menu_system: MenuSystem,
     visibility_system: VisibilitySystem,
     play_system: PlaySystem,
     pause_system: PauseSystem,
@@ -106,11 +104,10 @@ impl SnakeGame {
             input: Input::new(),
             events: Vec::new(),
             state: State::new(),
-            menu_system: MenuSystem,
             visibility_system: VisibilitySystem,
             play_system: PlaySystem,
             pause_system: PauseSystem,
-            game_over_system: GameOverSystem::new(),
+            game_over_system: GameOverSystem,
             sound_pack: SoundPack::new(),
             staged: crate::staged(),
             posing: 0.0,
@@ -127,7 +124,7 @@ impl Game for SnakeGame {
         window_size: (f32, f32),
     ) {
         self.resized(window_size);
-        self.menu_system.start(&mut self.state);
+        self.play_system.start(&mut self.state);
         self.state.initialize(geometry, text_renderer);
     }
 
@@ -146,7 +143,7 @@ impl Game for SnakeGame {
 
         for event in &self.events {
             match event {
-                Event::FocusChanged | Event::ButtonPressed | Event::SnakeCrashed => {
+                Event::ButtonPressed | Event::SnakeCrashed => {
                     sound_system.queue(self.sound_pack.bounce());
                 }
                 Event::Score => {
@@ -160,29 +157,17 @@ impl Game for SnakeGame {
             .update_state(&mut self.input, &mut self.state, &mut self.events);
 
         match self.state.game_state {
-            GameState::MainMenu => {
-                self.menu_system
-                    .update_state(&mut self.input, &mut self.state, &mut self.events);
-                if self.state.game_state == GameState::Playing {
-                    self.play_system.start(&mut self.state);
-                }
-            }
             GameState::Playing => {
                 self.play_system
                     .update_state(&mut self.input, &mut self.state, &mut self.events);
 
-                if self.state.game_state == GameState::MainMenu {
-                    self.menu_system.start(&mut self.state);
-                } else if self.state.game_state == GameState::GameOver {
+                if self.state.game_state == GameState::GameOver {
                     self.game_over_system.start(&mut self.state);
                 }
             }
             GameState::Paused => {
                 self.pause_system
                     .update_state(&mut self.input, &mut self.state, &mut self.events);
-                if self.state.game_state == GameState::MainMenu {
-                    self.menu_system.start(&mut self.state);
-                }
             }
             GameState::GameOver => {
                 self.game_over_system.update_state(
@@ -190,8 +175,8 @@ impl Game for SnakeGame {
                     &mut self.state,
                     &mut self.events,
                 );
-                if self.state.game_state == GameState::MainMenu {
-                    self.menu_system.start(&mut self.state);
+                if self.state.game_state == GameState::Playing {
+                    self.play_system.start(&mut self.state);
                 }
             }
             GameState::Quitting => {}
@@ -248,14 +233,17 @@ mod tests {
         game.focus_changed(false);
 
         assert_eq!(game.state.game_state, GameState::Paused);
-        assert_eq!(game.state.play_button.render_text.text, "Resume");
+        assert_eq!(
+            game.state.pause_text.render_text.text,
+            crate::system::PAUSED
+        );
     }
 
     #[test]
-    fn escaping_out_of_a_pause_arrives_at_a_real_menu() {
+    fn escaping_out_of_a_pause_quits() {
         let mut game = game_in(GameState::Playing);
         game.focus_changed(false);
-        assert_eq!(game.state.play_button.render_text.text, "Resume");
+        assert_eq!(game.state.game_state, GameState::Paused);
 
         game.input.esc_pressed = true;
         let mut geometry = Geometry::new();
@@ -263,18 +251,14 @@ mod tests {
         let sound_system = SoundSystem::new();
         game.update(0.016, &mut geometry, &mut text_renderer, &sound_system);
 
-        assert_eq!(game.state.game_state, GameState::MainMenu);
-        assert_eq!(game.state.title_text.render_text.text, "SNAKE");
-        assert_eq!(game.state.play_button.render_text.text, "Play");
+        assert_eq!(game.state.game_state, GameState::Quitting);
     }
 
     #[test]
-    fn losing_focus_on_the_menu_does_nothing() {
-        let mut game = game_in(GameState::MainMenu);
+    fn losing_focus_while_already_over_does_nothing() {
+        let mut game = game_in(GameState::GameOver);
         game.focus_changed(false);
 
-        assert_eq!(game.state.game_state, GameState::MainMenu);
-        assert_eq!(game.state.title_text.render_text.text, "SNAKE");
-        assert_eq!(game.state.play_button.render_text.text, "Play");
+        assert_eq!(game.state.game_state, GameState::GameOver);
     }
 }
