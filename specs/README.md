@@ -12,6 +12,7 @@ not a priority, and it never changes once a spec exists.
 | [0002](0002-snake.md) | Movement, turning, growth, and crashes |
 | [0003](0003-pellets.md) | Pellets, scoring, and speeding up |
 | [0004](0004-game-flow.md) | Menu, runs, and game over |
+| [0005](0005-a-picture-of-a-run.md) | The staged run held against a picture of it, with the pellet given a place so two runs agree |
 
 ---
 

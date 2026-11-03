@@ -18,6 +18,6 @@ pub fn staged() -> bool {
 }
 
 fn main() {
-    let snake_game = SnakeGame::new();
+    let snake_game = SnakeGame::new(staged());
     start("Snake", Box::new(snake_game));
 }

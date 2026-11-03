@@ -84,6 +84,17 @@ impl SnakeGame {
             for _ in 0..Self::GROWN {
                 self.state.snake.grow_body(&self.state.grid);
             }
+
+            // **And the pellet, which is otherwise wherever the dice said.**
+            // A staged run exists to be photographed, and `place_pellet`
+            // puts it on a random free cell, so every screenshot of snake
+            // had the pellet somewhere else and no two runs agreed. Three
+            // quarters across and a third down is clear of the snake, which
+            // starts in the middle going right.
+            let grid = self.state.grid;
+            self.state
+                .pellet
+                .place(&grid, (grid.cols * 3 / 4, grid.rows / 3));
         }
 
         let now = self.posing;
@@ -99,7 +110,11 @@ impl SnakeGame {
         }
     }
 
-    pub fn new() -> Self {
+    /// `staged` rather than a call to `crate::staged()`, so that a picture
+    /// test can ask for the photographed state without putting
+    /// `--screenshot` in its own arguments. `main` passes what the
+    /// arguments say.
+    pub fn new(staged: bool) -> Self {
         Self {
             input: Input::new(),
             events: Vec::new(),
@@ -109,7 +124,7 @@ impl SnakeGame {
             pause_system: PauseSystem,
             game_over_system: GameOverSystem,
             sound_pack: SoundPack::new(),
-            staged: crate::staged(),
+            staged,
             posing: 0.0,
         }
     }
@@ -220,8 +235,57 @@ impl Game for SnakeGame {
 mod tests {
     use super::*;
 
+    /// How big the picture is: the engine's own size, said once there and
+    /// read here, per its spec 0062.
+    const WIDE: u32 = blitzkit::picture::SIZE.0;
+    const TALL: u32 = blitzkit::picture::SIZE.1;
+
+    /// The snake mid-run, held against a picture of it. Spec 0005.
+    ///
+    /// **Through the overlay call, because snake is all overlay.** Every
+    /// quad it has goes into `Geometry` and it never touches `Scene`, so
+    /// the 3D-only harness photographs a blank frame of it. The engine's
+    /// spec 0078 is that call.
+    ///
+    /// **Driven rather than held still.** The other games stage
+    /// themselves inside one update and then stop, but this pose is on a
+    /// clock: it grows the snake, turns it up, turns it right again and
+    /// holds. So the test gives it the same fixed sixtieths the staged
+    /// run gets, until `HOLDS_AT` has passed and the pose stops the clock
+    /// itself. Nothing here is a real second, and the same count always
+    /// draws the same frame.
+    #[test]
+    fn the_snake_mid_run_looks_right() {
+        let reference =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/pictures/mid-run.png");
+
+        blitzkit::picture::drawn_with_overlay_looks_right(
+            &reference,
+            (WIDE, TALL),
+            |renderer, geometry, text| {
+                let mut game = SnakeGame::new(true);
+                let sound = SoundSystem::new();
+                let mut scene = blitzkit::renderer::scene::Scene::new();
+                let mut camera = blitzkit::camera::Camera::new();
+
+                game.load(renderer);
+                game.initialize(geometry, text, &sound, (WIDE as f32, TALL as f32));
+
+                let step = 1.0 / 60.0;
+                let steps = (SnakeGame::HOLDS_AT / step).ceil() as u32 + 1;
+                for _ in 0..steps {
+                    game.update(step, geometry, text, &sound);
+                }
+
+                game.draw(&mut scene, &mut camera);
+
+                (scene, camera)
+            },
+        );
+    }
+
     fn game_in(game_state: GameState) -> SnakeGame {
-        let mut game = SnakeGame::new();
+        let mut game = SnakeGame::new(false);
         game.state.layout((800.0, 600.0).into());
         game.state.game_state = game_state;
         game
