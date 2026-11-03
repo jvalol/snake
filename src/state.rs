@@ -35,6 +35,18 @@ pub struct State {
     pub delta_time: f32,
 }
 
+/// Where the score sits and how tall it is, in cells.
+///
+/// **In cells, because everything else in this game is.** They were 32
+/// points at (120, 20), which at the window this ships in happens to be
+/// about one cell tall, four cells in and two thirds of a cell down. Fixed
+/// points do not follow the window the way the playfield does, so at 320 by
+/// 240 "Score: 0" ran wider than the window and the number was past the
+/// right edge. Held by `the_score_fits_the_window`. Spec 0006.
+const SCORE_TALL: f32 = 1.1;
+const SCORE_IN: f32 = 4.0;
+const SCORE_DOWN: f32 = 0.7;
+
 impl State {
     pub fn new() -> Self {
         Self {
@@ -125,6 +137,12 @@ impl State {
 
         self.win_text.render_text.position = size * 0.5;
         self.pause_text.render_text.position = size * 0.5;
+
+        self.score.render_text.size = grid.cell * SCORE_TALL;
+        self.score.render_text.position = Vec2::new(
+            grid.origin.x + grid.cell * SCORE_IN,
+            grid.origin.y + grid.cell * SCORE_DOWN,
+        );
     }
 
     pub fn initialize(&mut self, geometry: &mut Geometry, text_renderer: &mut TextRenderer) {
@@ -180,6 +198,50 @@ impl State {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Spec 0006: the readout fits whatever window it is in.
+    ///
+    /// **Measured, not eyeballed.** `blitzkit::text::room_for` is what the
+    /// renderer lays a string out with, so this asks the same question the
+    /// drawing answers rather than a guess about how wide a glyph is.
+    ///
+    /// The engine's own picture size is in the list because that is where
+    /// this was found: snake's own reference showed "Score:" filling the
+    /// top and the number past the edge, which no window anybody plays in
+    /// would have shown.
+    #[test]
+    fn the_score_fits_the_window() {
+        // three digits, because 32 rows of pellets is more than two
+        let longest = String::from("Score: 999");
+
+        for (wide, tall) in [
+            (
+                blitzkit::picture::SIZE.0 as f32,
+                blitzkit::picture::SIZE.1 as f32,
+            ),
+            (640.0, 480.0),
+            (1200.0, 948.0),
+        ] {
+            let mut state = State::new();
+            state.layout(Vec2::new(wide, tall));
+            state.score.render_text.text = longest.clone();
+
+            let room = blitzkit::text::room_for(&longest, state.score.render_text.size);
+            let right = state.score.render_text.position.x + room.x;
+            let bottom = state.score.render_text.position.y + room.y;
+
+            assert!(
+                right <= wide,
+                "at {wide} by {tall} the score runs to {right}, which is {:.0} past the edge",
+                right - wide
+            );
+            assert!(
+                bottom <= tall,
+                "at {wide} by {tall} the score runs to {bottom}, which is {:.0} below the window",
+                bottom - tall
+            );
+        }
+    }
 
     fn state_of(width: f32, height: f32) -> State {
         let mut state = State::new();
