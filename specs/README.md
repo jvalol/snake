@@ -14,7 +14,3 @@ not a priority, and it never changes once a spec exists.
 | [0004](0004-game-flow.md) | Menu, runs, and game over |
 | [0005](0005-a-picture-of-a-run.md) | The staged run held against a picture of it, with the pellet given a place so two runs agree |
 | [0006](0006-a-readout-that-fits.md) | The score is placed in cells like the playfield, rather than in fixed points that ran off a small window |
-
----
-
-I asked AI to draft this for me. I've edited it. Any surviving AI smells are my oversight.
