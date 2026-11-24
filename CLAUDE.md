@@ -7,7 +7,7 @@ built inside this project folder.
 
 ## Build and test
 
-Requires Rust 1.87 or newer, the engine's MSRV.
+Requires Rust 1.90 or newer, the engine's MSRV.
 
 ```
 cargo build
